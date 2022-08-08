@@ -11,7 +11,7 @@ ARGS = [
     '-xc++', # allows inspecting headers
     '-std=c++20'
 ]
-INCLUDED_NAMESPACES = ['engine']
+INCLUDED_NAMESPACES = [] # TODO: "using namespace" these in rtti.cpp?
 
 # Linux: Add GCC headers
 if sys.platform.startswith('linux'):
@@ -75,13 +75,13 @@ def is_reflectable(clazz):
     return False
 
 # Traverse the AST and find all reflected classes
-def traverse(nodes: list[Cursor], parent=None, ident=0):
+def traverse(nodes: list[Cursor], namespace=None, ident=0):
     includes = []
     # TODO: better namespace handling
-    ns_prefix = parent.spelling + '::' if parent is not None and parent.spelling not in INCLUDED_NAMESPACES else '' 
+    ns_prefix = namespace + '::' if namespace is not None and namespace not in INCLUDED_NAMESPACES else '' 
 
     def write_enum(node: Cursor, prefix=ns_prefix):
-        nonlocal includes, parent
+        nonlocal includes
 
         if not node.is_definition():
             return
@@ -215,7 +215,7 @@ def traverse(nodes: list[Cursor], parent=None, ident=0):
         name = n.displayname
         match n.kind:
             case CursorKind.NAMESPACE:
-                includes += traverse(n.get_children(), parent=n, ident=ident)
+                includes += traverse(n.get_children(), namespace=ns_prefix+n.spelling, ident=ident)
             
             case CursorKind.CLASS_DECL | CursorKind.STRUCT_DECL:
                 #tokens = n.get_tokens()
