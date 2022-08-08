@@ -16,6 +16,12 @@
 #    define RAIN_FUNCTION_NAME_SUFFIX '>'
 #endif
 
+// HACK: To stop clangd complaining about unsupported features of <ranges> in libc++ 
+#if defined(__clang__) && defined(RAIN_CLANGD) && defined(_LIBCPP_CSTDINT)
+#   include <__config_site>
+#   undef _LIBCPP_HAS_NO_INCOMPLETE_RANGES
+#endif
+
 namespace rain
 {
     using Hash = RAIN_HASH_TYPE;
