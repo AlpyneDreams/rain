@@ -138,8 +138,8 @@ namespace rain
             return names.at(value);
         }
 
-        auto GetValue(std::string& name) const {
-            return values.at(name);
+        auto GetValue(std::string& valueName) const {
+            return values.at(valueName);
         }
     };
 }
