@@ -12,7 +12,8 @@
 
 namespace rain
 {
-    using uint64 = std::uint64_t;
+    using uintmax = std::uintmax_t;
+
     /** Extend this class to enable RTTI generation for subclasses. */
     struct Reflect {};
 
@@ -87,8 +88,8 @@ namespace rain
         size_t size;
         Type underlyingType = TypeID<std::nullptr_t>();
         bool scoped = true;
-        std::map<std::string, uint64> values;
-        std::map<uint64, std::string> names;
+        std::map<std::string, std::uintmax_t> values;
+        std::map<std::uintmax_t, std::string> names;
 
         // TODO: display names, preserve declaration order, flags
 

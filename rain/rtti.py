@@ -87,12 +87,12 @@ for spelling, data in enums.items():
     write(f'.values = {{', indent=1)
     values = data['values']
     for name in values:
-        write(f'{{ "{name}", uint64({spelling}::{name}) }},', indent=2)
+        write(f'{{ "{name}", uintmax({spelling}::{name}) }},', indent=2)
     write('},', indent=1)
 
     write(f'.names = {{', indent=1)
     for name, value in values.items():
-        write(f'{{ uint64({spelling}::{name}), "{name}" }},', indent=2)
+        write(f'{{ uintmax({spelling}::{name}), "{name}" }},', indent=2)
     write('}', indent=1)
     
     # End class RTTI
