@@ -1,39 +1,65 @@
 #pragma once
 
-#include <typeinfo>
-#include <typeindex>
 #include <string>
 #include <vector>
 #include <map>
 #include <unordered_map>
 #include <cstddef>
 
-#include <entt/core/type_info.hpp>
+#include "impl/config.h"
+#include "impl/type.h"
 
 namespace rain
 {
-    using uintmax = std::uintmax_t;
-
     /** Extend this class to enable RTTI generation for subclasses. */
     struct Reflect {};
 
-    using Type = entt::type_info;
-    using Hash = entt::id_type;
-    
-    // Get type info.
-    // Has to be function not variable or else we can get invalid results sometimes
+    /** The name of type T **/
     template <typename T>
-    Type TypeID() { return entt::type_id<T>(); }
+    constexpr std::string_view TypeName = internal::GetTypeName<T>();
 
-    // Type hashes (constexpr)
+    /** A unique type hash for type T **/
     template <typename T>
-    constexpr Hash TypeHash = entt::type_hash<T>::value();
+    constexpr Hash TypeHash = internal::GetTypeHash<T>();
+
+    /** Returns an ordered index for type T **/
+    template <typename T>
+    const inline Hash TypeIndex() noexcept { return internal::GetTypeIndex<T>(); }
+
+    /** Type info as returned by TypeID<T>() **/
+    struct Type final
+    {
+        Hash index;
+        Hash hash;
+        std::string_view name;
+
+        template <typename T, typename Plain = internal::PlainType<T>>
+        constexpr Type(std::in_place_type_t<T>) noexcept
+          : index {TypeIndex<Plain>()},
+            hash  {TypeHash<Plain>},
+            name  {TypeName<Plain>}
+        {}
+    };
+
+    
+    /** Get type info for type T **/
+    template <typename T>
+    const Type TypeID() noexcept {
+        using Plain = internal::PlainType<T>;
+        if constexpr (std::is_same_v<T, Plain>) {
+            static Type instance {std::in_place_type<T>};
+            return instance;
+        } else {
+            return TypeID<Plain>();
+        }
+    }
+
 
     template <typename T>
     struct Registry
     {
         static inline T& Register(T&& c) {
-            registry.insert({ c.type.hash(), c });
+            registry.insert({ c.type.hash, c });
             return c;
         }
 
@@ -47,7 +73,7 @@ namespace rain
         }
 
         static inline T* Get(Type type) {
-            return Get(type.hash());
+            return Get(type.hash);
         }
 
         static inline std::unordered_map<Hash, T> registry;
