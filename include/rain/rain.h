@@ -25,8 +25,7 @@ namespace rain
     template <typename T>
     constexpr Hash TypeHash = internal::GetTypeHash<T>();
 
-
-    /** Type info as returned by TypeID<T>() **/
+    /** Type info as returned by TypeID<T> **/
     struct Type final
     {
         Hash hash;
@@ -52,20 +51,12 @@ namespace rain
         constexpr operator bool() const {
             return hash != TypeHash<std::nullptr_t>;
         }
+
+        constexpr auto operator <=>(const Type& rhs) const { return hash <=> rhs.hash; }
     };
 
-    
-    /** Get type info for type T **/
     template <typename T>
-    const Type TypeID() noexcept {
-        using Plain = internal::PlainType<T>;
-        if constexpr (std::is_same_v<T, Plain>) {
-            static Type instance {std::in_place_type<T>};
-            return instance;
-        } else {
-            return TypeID<Plain>();
-        }
-    }
+    constexpr Type TypeID = Type(std::in_place_type<internal::PlainType<T>>);
 
 
     /** Base class for RTTI registries: Class, Enum, etc. **/

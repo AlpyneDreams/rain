@@ -115,9 +115,9 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
             'name': node.displayname,
             'displayName': display_name(node.displayname),
             'location': location,
-            'type': f'TypeID<{name}>()',
+            'type': f'TypeID<{name}>',
             'size': f'sizeof({name})',
-            'underlyingType': f'TypeID<{node.enum_type.spelling}>()',
+            'underlyingType': f'TypeID<{node.enum_type.spelling}>',
             'scoped': 'true' if node.is_scoped_enum else 'false',
             'values': values
         }
@@ -189,7 +189,7 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
             'name': node.displayname,
             'displayName': display_name(node.displayname),
             'location': location,
-            'type': f'TypeID<{name}>()',
+            'type': f'TypeID<{name}>',
             'size': f'sizeof({name})',
             'fields': []
         }
@@ -200,7 +200,7 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
             return {
                 'name': n.spelling,
                 'displayName': display_name(n.spelling),
-                'type': f'TypeID<{typeclass.spelling}>()',
+                'type': f'TypeID<{typeclass.spelling}>',
                 'offset': f'offsetof({name}, {n.spelling})',
             }
         
