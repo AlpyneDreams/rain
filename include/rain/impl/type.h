@@ -58,18 +58,4 @@ namespace rain::internal
         return value;
     }
 
-
-// Type Index //
-
-    [[nodiscard]] inline Hash NextTypeIndex() noexcept {
-        static Hash value;
-        return value++;
-    }
-
-    template <typename T>
-    [[nodiscard]] inline Hash GetTypeIndex() noexcept {
-        static const Hash index = NextTypeIndex();
-        return index;
-    }
-
 }

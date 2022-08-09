@@ -25,22 +25,17 @@ namespace rain
     template <typename T>
     constexpr Hash TypeHash = internal::GetTypeHash<T>();
 
-    /** Returns an ordered index for type T **/
-    template <typename T>
-    const inline Hash TypeIndex() noexcept { return internal::GetTypeIndex<T>(); }
 
     /** Type info as returned by TypeID<T>() **/
     struct Type final
     {
-        Hash index;
         Hash hash;
         std::string_view name;
 
         template <typename T, typename Plain = internal::PlainType<T>>
         constexpr Type(std::in_place_type_t<T>) noexcept
-          : index {TypeIndex<Plain>()},
-            hash  {TypeHash<Plain>},
-            name  {TypeName<Plain>}
+          : hash {TypeHash<Plain>},
+            name {TypeName<Plain>}
         {}
     };
 
