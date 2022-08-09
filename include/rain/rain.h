@@ -37,6 +37,21 @@ namespace rain
           : hash {TypeHash<Plain>},
             name {TypeName<Plain>}
         {}
+
+        constexpr Type(const Type& type) noexcept
+          : hash {type.hash},
+            name {type.name}
+        {}
+
+        // Null Type (Default Constructor)
+        constexpr Type() noexcept
+          : hash {TypeHash<std::nullptr_t>},
+            name {TypeName<std::nullptr_t>}
+        {}
+
+        constexpr operator bool() const {
+            return hash != TypeHash<std::nullptr_t>;
+        }
     };
 
     
@@ -84,7 +99,7 @@ namespace rain
     {
         const char* name;
         const char* displayName;
-        Type type = TypeID<std::nullptr_t>();
+        Type type;
         size_t offset;
 
         template <typename T>
@@ -103,7 +118,7 @@ namespace rain
     {
         const char* name;
         const char* displayName;
-        Type type = TypeID<std::nullptr_t>();
+        Type type;
         size_t size;
         std::vector<Field> fields;
     };
@@ -113,9 +128,9 @@ namespace rain
     {
         const char* name;
         const char* displayName;
-        Type type = TypeID<std::nullptr_t>();
+        Type type;
         size_t size;
-        Type underlyingType = TypeID<std::nullptr_t>();
+        Type underlyingType;
         bool scoped = true;
         std::map<std::string, std::uintmax_t> values;
         std::map<std::uintmax_t, std::string> names;
