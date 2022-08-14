@@ -1,5 +1,5 @@
 from functools import cache
-from clang.cindex import Index, CursorKind, CompilationDatabase, Cursor, AccessSpecifier
+from clang.cindex import Index, CursorKind, CompilationDatabase, Cursor, AccessSpecifier, TranslationUnit
 import os, os.path, sys, re, json
 
 from util import Colors, command_output, print_diagnostic
@@ -263,6 +263,7 @@ def main():
     # Add default args
     args += ARGS
     # Parse translation unit
+    options = TranslationUnit.PARSE_SKIP_FUNCTION_BODIES | TranslationUnit.PARSE_INCOMPLETE
     tu = index.parse(cmd.filename, args)
 
     # Print diagnostics
