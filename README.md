@@ -29,7 +29,7 @@ foreach file : proj_src
     proj_meta += custom_target(
         fs.name(file) + '.meta.json',
         output: fs.name(file) + '.meta.json',
-        input: [rain.get_variable('rain_meta_py'), file],
+        input: [rain.get_variable('rain_update_py'), file],
         command: [python, '@INPUT@', '@OUTPUT@'],
         console: true
     )
@@ -40,7 +40,7 @@ proj_rtti = custom_target(
     'rtti.cpp',
     output: 'rtti.cpp',
     input: [rain.get_variable('rain_rtti_py'), proj_meta],
-    command: [python, '@INPUT@', '@OUTPUT@'],
+    command: [python, '@INPUT@', '@OUTPUT@', '@CURRENT_SOURCE_DIR@],
     console: true
 )
 

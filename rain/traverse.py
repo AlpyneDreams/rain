@@ -1,29 +1,11 @@
 from functools import cache
-from clang.cindex import Index, CursorKind, CompilationDatabase, Cursor, AccessSpecifier, TranslationUnit
-import os, os.path, sys, re, json
+from clang.cindex import TranslationUnit, CursorKind, Cursor, AccessSpecifier
+import os, os.path, re
 
-from util import Colors, command_output, print_diagnostic
-
-# Usage: meta.py <input.cpp> [output.meta.json]
-# Generates a single meta file for a single translation unit
-# Invoked by src/meson.build
+from util import Colors
 
 SRC_DIR = '../src'
-ARGS = [
-    '-xc++', # allows inspecting headers
-    '-std=c++20'
-]
 INCLUDED_NAMESPACES = [] # TODO: "using namespace" these in rtti.cpp?
-
-# Linux: Add Clang headers
-if sys.platform.startswith('linux'):
-    includes = command_output('clang', '--print-file-name=include')
-    ARGS += [f'-I{includes.strip()}']
-
-# Read arguments: <input> [output]
-infile = sys.argv[1]
-dummy = sys.argv[2] if len(sys.argv) > 2 else infile + '.meta.cpp'
-outfile = sys.argv[2] if len(sys.argv) > 2 else infile + '.meta.json'
 
 out_classes = {}
 out_enums = {}
@@ -81,7 +63,7 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
 
         if not node.is_definition():
             return
-        print('Reflecting enum:', node.spelling)
+        #print('Reflecting enum:', node.spelling)
 
         # Get all enum values
         values = {}
@@ -142,7 +124,7 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
 
         if not node.is_definition() or not is_reflectable(node):
             return
-        print('Reflecting class:', node.spelling)
+        #print('Reflecting class:', node.spelling)
         
         nonlocal includes
         keyword = 'struct' if node.kind == CursorKind.STRUCT_DECL else 'class'
@@ -249,26 +231,10 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
                 pass
     return set(includes)
 
-def main():
-    # Read compile_commands.json
-    compile_commands = CompilationDatabase.fromDirectory('../build')
-
-    index = Index.create()
-
-    # Get compile commands for this specific file
-    cmd = compile_commands.getCompileCommands(infile)[0]
-
-    # Get include dirs
-    args = [arg for arg in cmd.arguments if arg.startswith('-I') or arg.startswith('-D')]
-    # Add default args
-    args += ARGS
-    # Parse translation unit
-    options = TranslationUnit.PARSE_SKIP_FUNCTION_BODIES | TranslationUnit.PARSE_INCOMPLETE
-    tu = index.parse(cmd.filename, args)
-
-    # Print diagnostics
-    for msg in tu.diagnostics:
-        print_diagnostic(msg)
+def traverse_file(tu: TranslationUnit, filename):
+    global out_classes, out_enums
+    out_classes = {}
+    out_enums = {}
 
     # Only inspect files inside the project source directory
     nodes = in_path(tu.cursor.get_children(), SRC_DIR)
@@ -277,14 +243,9 @@ def main():
     includes = traverse(nodes, ident=1)
 
     out = {}
-    out['filename'] = infile
+    out['filename'] = filename
     out['includes'] = list(includes)
     out['classes'] = out_classes
     out['enums'] = out_enums
+    return out
 
-    output = open(outfile, 'w')
-    output.write(json.dumps(out, indent=4))
-    output.close()
-
-if __name__ == '__main__':
-    main()

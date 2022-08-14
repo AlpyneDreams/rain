@@ -1,7 +1,13 @@
 import os, os.path, sys, json, time
 
-infiles = sys.argv[1:-1]
-outfile = sys.argv[-1]
+from util import Colors
+from parse import parse_files
+
+# Usage: rtti.py <meta files...> <rtti.cpp> <src folder>
+
+infiles = sys.argv[1:-2]
+outfile = sys.argv[-2]
+src_root = sys.argv[-1]
 
 start_time = time.time()
 
@@ -9,16 +15,44 @@ includes = set()
 classes = {}
 enums = {}
 
-for filename in infiles:
+stale_files = {}
+
+print(Colors.CYAN)
+print(f'==================== Rain RTTI ====================')
+print(Colors.END, end='')
+
+# Load reflection information from .meta.json file
+def load_meta(filename):
+    global stale_files
     filename = os.path.splitext(filename)[0] + '.json'
     if not os.path.exists(filename):
-        continue
+        print(Colors.YELLOW + f"Can't find meta file: {filename}" + Colors.END)
+        return
     with open(filename) as file:
         meta = json.load(file)
+        if "stale" in meta and meta["stale"]:
+            stale_files[meta["filename"]] = filename
+            return
         classes.update(meta['classes'])
         enums.update(meta['enums'])
         for inc in meta['includes']:
             includes.add(inc)
+
+for filename in infiles:
+    load_meta(filename)
+
+# If there's any stale meta files, regenerate them
+if len(stale_files) > 0:
+    print(Colors.PURPLE + f"Regenerating RTTI for {len(stale_files)} files..." + Colors.END)
+
+    # Reparse stale files
+    parse_files(src_root, stale_files)
+    
+    for file in stale_files:
+        load_meta(stale_files[file])
+    print(f"Generating '{outfile}'")
+else:
+    print(f"Up to date! Generating '{outfile}'")
 
 output = open(outfile, 'w')
 global_indent = 0
@@ -115,3 +149,7 @@ global_indent -= 1
 write('}')
 
 output.close()
+
+print(Colors.CYAN, end='')
+print(f'===================================================')
+print(Colors.END)
