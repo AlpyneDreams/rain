@@ -161,7 +161,13 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
         for n in node.get_children():
             match n.kind:
                 case CursorKind.CXX_BASE_SPECIFIER:
-                    bases += [n]
+                    spelling = n.spelling
+
+                    # HACK: Some template specializations are missing namespace::
+                    if not re.match(r'^((struct|class)\s+)?\w+::', spelling):
+                        spelling = prefix + spelling
+                    
+                    bases += [spelling]
 
                     # Add derived classes recursively
                     def add_derived_class(spelling):
@@ -206,7 +212,7 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
             'type': f'TypeID<{name}>',
             'size': f'sizeof({name})',
             'fields': [],
-            'bases': [n.spelling for n in bases],
+            'bases': bases,
             'derived': []
         }
 
