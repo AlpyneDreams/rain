@@ -277,6 +277,7 @@ def main():
     includes = traverse(nodes, ident=1)
 
     out = {}
+    out['filename'] = infile
     out['includes'] = list(includes)
     out['classes'] = out_classes
     out['enums'] = out_enums
