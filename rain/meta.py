@@ -151,14 +151,29 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
         nonlocal includes
         keyword = 'struct' if node.kind == CursorKind.STRUCT_DECL else 'class'
 
+        name = f'{keyword} {prefix}{node.displayname}'
+
         # Get all fields, methods, etc.
         fields = []
         classes = []
         enums = []
+        bases = []
         for n in node.get_children():
             match n.kind:
                 case CursorKind.CXX_BASE_SPECIFIER:
-                    pass # TODO: base class
+                    bases += [n]
+
+                    # Add derived classes recursively
+                    def add_derived_class(spelling):
+                        if spelling in out_classes:
+                            base = out_classes[spelling]
+                            base['derived'].append(name)
+                            for super in base['bases']:
+                                add_derived_class(super)
+                    
+                    add_derived_class(n.spelling)
+
+                    # TODO: Add base class fields
                 case CursorKind.FIELD_DECL:
                     fields += [n]
                 case CursorKind.CXX_METHOD:
@@ -184,14 +199,15 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
             return
         
         # Begin class RTTI definition
-        name = f'{keyword} {prefix}{node.displayname}'
         out_classes[name] = {
             'name': node.displayname,
             'displayName': display_name(node.displayname),
             'location': location,
             'type': f'TypeID<{name}>',
             'size': f'sizeof({name})',
-            'fields': []
+            'fields': [],
+            'bases': [n.spelling for n in bases],
+            'derived': []
         }
 
         # Write fields

@@ -2,15 +2,39 @@
 
 #include "impl/config.h"
 
+#include <type_traits>
+#include <typeindex>
+#include <algorithm>
 #include <string>
+#include <utility>
 #include <vector>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <cstddef>
 #include <iterator>
 #include <ranges>
 
 #include "impl/type.h"
+
+/** TODO:
+ *  - Configuration, meson setup
+ *  - constexpr TypeIndex if possible
+ *  - Should everything be accessed by methods or is raw data fine?
+ *  - Probably best to model desired API before implementing
+ *      - e.g. Simplify rain::Class::Get<Component>()->GetDerivedClasses()
+ *  - Ditch designated initializer syntax
+ *      - base class Object for Enum, Field, Class with name/displayName/type/size
+ *  - Potentially reflect all classes by default
+ *  - Include size in Type?
+ *  - MSVC testing
+ *  - Exceptions rather than returning nullptr?
+ *  - Lowercase member functions?
+ *  - Sizes and offsets determined by libclang and not Python?
+ *  - Fancy transform views for e.g. GetBaseClasses
+ *      - Returning 'bases | std::views::transform' would work but annoys clang
+ *        because it doesn't understand gcc's headers.
+ */
 
 namespace rain
 {
@@ -82,7 +106,18 @@ namespace rain
             return Get(type.hash);
         }
 
+        static inline auto GetAll(const auto& hashes) {
+            std::unordered_set<T*> items;
+            for (Hash hash : hashes)
+                items.insert(Get(hash));
+            return items;
+        }
+        
         static inline std::unordered_map<Hash, T> registry;
+    };
+
+    enum class Access {
+        None, Public, Protected, Private
     };
 
     /** RTTI data for a field in a struct or class. **/
@@ -112,6 +147,48 @@ namespace rain
         Type type;
         size_t size;
         std::vector<Field> fields;
+
+        struct Relationship {
+            Access access;
+            bool isVirtual;
+        };
+
+        //std::unordered_map<Hash, Relationship> bases;
+        std::unordered_set<Hash> bases;
+        std::unordered_set<Hash> derived;
+
+        // TODO: Return some kind of fancy transform views like std::views::transform
+        // without agitating clang
+        
+        inline const auto GetBaseClasses() const {
+            return GetAll(bases);
+            //return bases | std::views::transform([&](const Hash h) { return Get(h); });
+        }
+        inline const auto GetDerivedClasses() const {
+            return GetAll(derived);
+            //return derived | std::views::transform([&](const Hash h) { return Get(h); });
+        }
+
+        // Behaves the same as std::is_base_of_v
+        template <typename T>
+        inline bool DerivedFrom() const {
+            // Same type => true
+            if (type.hash == TypeHash<T>)
+                return true;
+            
+            //for (auto& [hash, relationship] : bases) {
+            for (Hash hash : bases) {
+                // Direct base
+                if (hash == TypeHash<T>)
+                    return true;
+                
+                // Inherited base (recurse)
+                Class* base = Class::Get(hash);
+                if (base && base->DerivedFrom<T>())
+                    return true;
+            }
+            return false;
+        }
     };
 
     /** RTTI data for an enum. **/

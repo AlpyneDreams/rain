@@ -66,6 +66,17 @@ for spelling, data in classes.items():
         for n in fields:
             write(f'{{ "{n["name"]}", "{n["displayName"]}", {n["type"]}, {n["offset"]} }},', indent=2)
         write('},', indent=1)
+
+    # Write base classes
+    bases = data['bases']
+    if len(bases) > 0:
+        write(f'.bases = {{ {", ".join([f"TypeHash<{n}>" for n in bases])} }},', indent=1)
+
+    # Write subclasses
+    derived = data['derived']
+    if len(derived) > 0:
+        write(f'.derived = {{ {", ".join([f"TypeHash<{n}>" for n in derived])} }},', indent=1)
+
     
     # End class RTTI
     write('});\n')
