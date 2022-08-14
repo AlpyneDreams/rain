@@ -15,9 +15,9 @@ ARGS = [
 ]
 INCLUDED_NAMESPACES = [] # TODO: "using namespace" these in rtti.cpp?
 
-# Linux: Add GCC headers
+# Linux: Add Clang headers
 if sys.platform.startswith('linux'):
-    includes = command_output('gcc', '--print-file-name=include')
+    includes = command_output('clang', '--print-file-name=include')
     ARGS += [f'-I{includes.strip()}']
 
 # Read arguments: <input> [output]
