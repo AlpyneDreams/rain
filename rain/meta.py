@@ -2,7 +2,9 @@ from functools import cache
 from clang.cindex import Index, CursorKind, CompilationDatabase, Cursor, AccessSpecifier
 import os, os.path, sys, re, json
 
-# Usage: rtti.py <input.cpp> [output.meta.cpp]
+from util import Colors, command_output, print_diagnostic
+
+# Usage: meta.py <input.cpp> [output.meta.json]
 # Generates a single meta file for a single translation unit
 # Invoked by src/meson.build
 
@@ -15,14 +17,8 @@ INCLUDED_NAMESPACES = [] # TODO: "using namespace" these in rtti.cpp?
 
 # Linux: Add GCC headers
 if sys.platform.startswith('linux'):
-    import subprocess
-    includes = subprocess.check_output(['gcc', '--print-file-name=include'], encoding='utf-8')
+    includes = command_output('gcc', '--print-file-name=include')
     ARGS += [f'-I{includes.strip()}']
-
-# https://ansi.gabebanks.net/
-class Colors:
-    DIM = '\033[2m'
-    END = '\033[0m'
 
 # Read arguments: <input> [output]
 infile = sys.argv[1]
@@ -271,7 +267,7 @@ def main():
 
     # Print diagnostics
     for msg in tu.diagnostics:
-        print(Colors.DIM + str(msg) + Colors.END)
+        print_diagnostic(msg)
 
     # Only inspect files inside the project source directory
     nodes = in_path(tu.cursor.get_children(), SRC_DIR)
