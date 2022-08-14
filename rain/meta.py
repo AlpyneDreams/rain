@@ -259,7 +259,7 @@ def main():
     cmd = compile_commands.getCompileCommands(infile)[0]
 
     # Get include dirs
-    args = [arg for arg in cmd.arguments if arg.startswith('-I')]
+    args = [arg for arg in cmd.arguments if arg.startswith('-I') or arg.startswith('-D')]
     # Add default args
     args += ARGS
     # Parse translation unit
