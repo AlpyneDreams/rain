@@ -1,2 +1,5 @@
 # Clang cache
 .cache
+
+# Pycache
+__pycache__
