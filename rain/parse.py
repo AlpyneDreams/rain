@@ -65,8 +65,14 @@ def parse_files(src_root, stale_files):
     print(Colors.PURPLE + f"Parsed all files in {round((end_time - start_time) * 1000)} ms" + Colors.END)
 
 def parse_file(index, file, cmd_args):
-    # Get include dirs
-    args = [arg for arg in cmd_args if arg.startswith('-I') or arg.startswith('-D')]
+    # Get include dirs & defines
+    args = [arg for arg in cmd_args if arg.lstrip('"').startswith('-I') or arg.lstrip('"').startswith('-D')]
+
+    # Strip and unescape quotes
+    for i, arg in enumerate(args):
+        if arg[0] == '"' and arg[-1] == '"':
+            args[i] = arg[1:-1].replace('\\"', '"')
+
     # Add default args
     args += ARGS
 
