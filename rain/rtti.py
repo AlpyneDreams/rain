@@ -67,7 +67,9 @@ for inc in includes:
 # Suppress offsetof warnings (for non-standard layout structs)
 # TODO: This seems to work but is not guaranteed to
 write()
+write('#ifdef __GNUC__')
 write('#pragma GCC diagnostic ignored "-Winvalid-offsetof"')
+write('#endif')
 
 # Begin RTTI namesapce
 write()
