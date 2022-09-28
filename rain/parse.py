@@ -59,7 +59,7 @@ def parse_files(src_root, stale_files):
         meta = parse_file(index, file, args)
 
         with open(stale_files[file], 'w') as f:
-            f.write(json.dumps(meta)) 
+            f.write(json.dumps(meta, indent='\t')) 
     
     end_time = time.perf_counter()
     print(Colors.PURPLE + f"Parsed all files in {round((end_time - start_time) * 1000)} ms" + Colors.END)
