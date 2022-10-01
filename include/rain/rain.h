@@ -2,6 +2,7 @@
 
 #include "impl/config.h"
 
+#include <any>
 #include <type_traits>
 #include <typeindex>
 #include <algorithm>
@@ -120,6 +121,9 @@ namespace rain
         None, Public, Protected, Private
     };
 
+    // TODO: Base classes of Field, Method: Variable, Function
+    // TODO: Access for Field, Method
+
     /** RTTI data for a field in a struct or class. **/
     struct Field
     {
@@ -139,6 +143,25 @@ namespace rain
         }
     };
 
+    /** RTTI data for a member function in a struct or class. **/
+    struct Method
+    {
+        const char* name;
+        const char* displayName;
+        std::any pointer;
+        Type result;
+        std::vector<Type> args;
+
+        bool isStatic = false;
+        bool isVirtual = false;
+        bool noExcept = false;
+        bool final = false;
+        bool override = false;
+    };
+
+    // There are a million bad ways and zero good ways to store this data.
+    #define MEMBER_FUNCTION(Pointer)   [](auto* object, auto... args) {{ return object->*(Pointer)(args...); }}
+
     /** RTTI data for a class or struct. **/
     struct Class : Registry<Class>
     {
@@ -147,6 +170,7 @@ namespace rain
         Type type;
         size_t size;
         std::vector<Field> fields;
+        std::vector<Method> methods;
 
         struct Relationship {
             Access access;

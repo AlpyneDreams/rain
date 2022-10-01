@@ -133,6 +133,7 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
 
         # Get all fields, methods, etc.
         fields = []
+        methods = []
         classes = []
         enums = []
         bases = []
@@ -161,7 +162,10 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
                 case CursorKind.FIELD_DECL:
                     fields += [n]
                 case CursorKind.CXX_METHOD:
-                    pass # TODO: class methods
+                    # TODO: Static methods
+                    if n.is_static_method():
+                        return
+                    methods += [n]
                 case CursorKind.CLASS_DECL | CursorKind.STRUCT_DECL:
                     classes += [n]
                 case CursorKind.ENUM_DECL:
@@ -172,7 +176,7 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
                     pass
         
         # Source file location of class
-        file = f'{os.path.relpath(node.location.file.name, SRC_DIR)}'
+        file = f'{os.path.relpath(node.location.file.name, SRC_DIR)}'.replace('\\', '/')
         location = f'{file}:{node.location.line}'
 
         includes += [os.path.normpath(file)]
@@ -190,6 +194,7 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
             'type': f'TypeID<{name}>',
             'size': f'sizeof({name})',
             'fields': [],
+            'methods': [],
             'bases': bases,
             'derived': []
         }
@@ -207,6 +212,25 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
         # Only public fields for now
         out_classes[name]['fields'] += [
             field(n) for n in fields if n.access_specifier == AccessSpecifier.PUBLIC
+        ]
+
+        # Write methods
+        def method(n):
+            result = n.result_type.get_canonical()
+            args = []
+            for arg in n.get_arguments():
+                args += [f'{arg.type.get_canonical().spelling}']
+            return {
+                'name': n.spelling,
+                'displayName': display_name(n.spelling),
+                'pointer': f'&{prefix}{node.displayname}::{n.spelling}',
+                'result': f'{result.spelling}',
+                'args': args
+            }
+
+        # Only public methods for now
+        out_classes[name]['methods'] += [
+            method(n) for n in methods if n.access_specifier == AccessSpecifier.PUBLIC
         ]
 
         write_class_children(n, prefix)

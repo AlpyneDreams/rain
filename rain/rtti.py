@@ -103,6 +103,18 @@ for spelling, data in classes.items():
             write(f'{{ "{n["name"]}", "{n["displayName"]}", {n["type"]}, {n["offset"]} }},', indent=2)
         write('},', indent=1)
 
+    methods = data['methods']
+    # Write methods
+    if len(methods) > 0:
+        write('.methods = {', indent=1)
+        for n in methods:
+            if n["name"].startswith('operator'):
+                continue
+            argtypes = ', '.join(n["args"])
+            args = ', '.join(f'TypeID<{arg}>' for arg in n["args"])
+            write(f'Method {{ "{n["name"]}", "{n["displayName"]}", MEMBER_FUNCTION({n["pointer"]}), TypeID<{n["result"]}>, {{{args}}} }},', indent=2)
+        write('},', indent=1)
+
     # Write base classes
     bases = data['bases']
     if len(bases) > 0:
