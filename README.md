@@ -52,3 +52,11 @@ proj_exe = executable(files(proj_src), proj_rtti,
 )
 
 ```
+
+## Structure
+
+The Python scripts are as follows:
+- `update.py` - simply marks a given meta file as stale
+- `rtti.py` - generates a `rtti.cpp` file from a list of meta files
+  - `parse.py` - actual libclang parsing logic - regenerates stale meta files
+    - `traverse.py` - traverses the AST to produce type info
