@@ -164,7 +164,7 @@ def traverse(nodes: list[Cursor], namespace=None, ident=0):
                 case CursorKind.CXX_METHOD:
                     # TODO: Static methods
                     if n.is_static_method():
-                        return
+                        pass
                     methods += [n]
                 case CursorKind.CLASS_DECL | CursorKind.STRUCT_DECL:
                     classes += [n]
